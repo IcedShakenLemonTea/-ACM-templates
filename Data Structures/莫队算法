@@ -1,0 +1,60 @@
+#include <bits/stdc++.h>
+using namespace std;
+const int MAX=50000;
+typedef long long LL;
+int n,a[MAX+5],res[MAX+5],block;
+struct node
+{
+    int l,r,id;
+    bool operator <(const node &t) const
+    {
+        if(l/block!=t.l/block) return l/block<t.l/block;
+        else return r<t.r; 
+    }
+}q[MAX+5];
+void solve(int pos,int f)
+{
+
+}
+int main()
+{
+    //freopen("1.txt","r",stdin);
+    int m;
+    scanf("%d%d",&n,&m);//数组大小、询问次数
+    block=sqrt(n);//分块大小
+    for(int i=1;i<=n;++i) scanf("%d",&a[i]);
+    for(int i=0;i<m;++i)
+    {
+        scanf("%d%d",&q[i].l,&q[i].r);
+        q[i].id=i;
+    }
+    sort(q,q+m);//询问排序
+    int L=1,R=1;
+    int ans=0;
+    for(int i=0;i<m;++i)
+    {
+        while(L<q[i].l) //左端点右移
+        {
+            ans+=solve(L,-1);
+            L++;
+        }
+        while(L>q[i].l) //左端点左移
+        {
+            L--;
+            ans+=solve(L,1);
+        }
+        while(R<q[i].r) //右端点右移
+        {
+            R++;
+            ans+=solve(R,1);
+        }
+        while(R>q[i].r) //右端点左移
+        {
+            ans+=solve(R,-1);
+            R--;
+        }
+        res[q[i].id]=M-m;//输出答案
+    }
+    for(int i=0;i<m;++i) printf("%lld\n",res[i]);
+    return 0;
+}
