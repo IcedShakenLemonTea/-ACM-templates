@@ -1,0 +1,49 @@
+#include <bits/stdc++.h>
+using namespace std;
+int pw[32];
+int f[50005][22],g[50005][22]; //f[i][j]表示区间[i,i+2^j-1]中的最大值,g[i][j]表示区间[i,i+2^j-1]中的最小值
+void init()
+{
+    pw[0]=1;
+    for(int i=1;i<=31;++i) pw[i]=pw[i-1]*2;
+}
+int findone(unsigned x)//32bit版本返回二进制最高位1
+{
+    int n=1;
+    if(x==0) return -1;
+    if ((x>>16) == 0) {n = n+16; x = x<<16;}
+    if ((x>>24) == 0) {n = n+8; x = x<<8;}
+    if ((x>>28) == 0) {n = n+4; x = x<<4;}
+    if ((x>>30) == 0) {n = n+2; x = x<<2;}
+    n = n-(x>>31);
+    return 31-n;    
+}
+int main()
+{
+    freopen("3.txt","r",stdin);
+    init();
+    int n,q;
+    scanf("%d%d",&n,&q);
+    for(int i=1;i<=n;++i) 
+    {
+        scanf("%d",&f[i][0]);
+        g[i][0]=f[i][0];
+    }
+    for(int j=1;j<=20;++j)
+    {
+        int M=n+1-pw[j];
+        for(int i=1;i<=M;++i)
+        {
+            f[i][j]=max(f[i][j-1],f[i+pw[j-1]][j-1]);
+            g[i][j]=min(g[i][j-1],g[i+pw[j-1]][j-1]);
+        }
+    }
+    while(q--)
+    {
+        int l,r;
+        scanf("%d%d",&l,&r);
+        int k=findone(r-l+1);
+        printf("%d\n",max(f[l][k],f[r-pw[k]+1][k])-min(g[l][k],g[r-pw[k]+1][k]));
+    }
+    return 0;
+}
