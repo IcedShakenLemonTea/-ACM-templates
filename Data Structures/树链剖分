@@ -1,0 +1,214 @@
+#include <bits/stdc++.h>
+#define MAX 100005
+#define lson (2*id)
+#define rson (2*id+1)
+using namespace std;
+int n,m,head[MAX];
+struct edge
+{
+    int u,nxt;
+    edge(int _u=-1,int _n=-1) {u=_u;nxt=_n;}
+}e[2*MAX];
+void addedge(int u,int v)
+{
+    e[m]=edge(v,head[u]);head[u]=m++;
+    e[m]=edge(u,head[v]);head[v]=m++;
+}
+int siz[MAX],dep[MAX],fa[MAX],son[MAX];
+void dfs1(int deep,int father,int v)
+{
+    int cnt=0;
+    siz[v]=1;
+    dep[v]=deep;
+    fa[v]=father;
+    son[v]=-1;
+    for(int p=head[v];p!=-1;p=e[p].nxt)
+    {
+        int u=e[p].u;
+        if(u==father) continue;
+        dfs1(deep+1,v,u);
+        siz[v]+=siz[u];
+        if(siz[u]>cnt)
+        {
+            cnt=siz[u];
+            son[v]=u;
+        }
+    }
+}
+int N,top[MAX],id[MAX];
+void dfs2(int father,int v)
+{
+    if(son[v]==-1) return ;
+    int u=son[v];
+    top[u]=top[v];
+    id[u]=++N;
+    dfs2(v,u);
+    for(int p=head[v];p!=-1;p=e[p].nxt)
+    {
+        u=e[p].u;
+        if(u==father||u==son[v]) continue;
+        top[u]=u;
+        id[u]=++N;
+        dfs2(v,u);
+    }
+}
+struct node
+{
+    int l,r;
+    int p;
+    int add,s;
+}tr[4*MAX];
+void build(int l,int r,int id)
+{
+    tr[id].l=l;
+    tr[id].r=r;
+    tr[id].p=0;
+    tr[id].add=0;
+    tr[id].s=0;
+    if(l!=r)
+    {
+        int mid=(tr[id].l+tr[id].r)/2;
+        build(l,mid,lson);
+        build(mid+1,r,rson);
+    }
+}
+void update1(int pos,int id,int x)
+{
+    if(tr[id].l==pos&&tr[id].r==pos)
+    {
+        tr[id].p+=x;
+        return ;
+    }
+    int mid=(tr[id].l+tr[id].r)>>1;
+    if(pos<=mid) update1(pos,lson,x);
+    else update1(pos,rson,x);
+    tr[id].p=tr[lson].p+tr[rson].p;
+}
+void pushdown(int id)
+{
+    if(tr[id].l==tr[id].r) return;
+    if(tr[id].add)
+    {
+        tr[lson].add+=tr[id].add;
+        tr[lson].s+=(tr[lson].r-tr[lson].l+1)*tr[id].add;
+        tr[rson].add+=tr[id].add;
+        tr[rson].s+=(tr[rson].r-tr[rson].l+1)*tr[id].add;
+        tr[id].add=0;
+    }
+}
+void update2(int l,int r,int id,int x)
+{
+    if(tr[id].l>=l&&tr[id].r<=r)
+    {
+        tr[id].s+=x*(tr[id].r-tr[id].l+1);
+        tr[id].add+=x;
+        return ;
+    }
+    pushdown(id);
+    int mid=(tr[id].l+tr[id].r)/2;
+    if(l<=mid) update2(l,r,lson,x);
+    if(r>mid) update2(l,r,rson,x);
+    tr[id].s=tr[lson].s+tr[rson].s;
+}
+int query1(int l,int r,int id)
+{
+    if(tr[id].l>=l&&tr[id].r<=r) return tr[id].p;
+    int mid=(tr[id].l+tr[id].r)/2,ans=0;
+    if(l<=mid) ans+=query1(l,r,lson);
+    if(r>mid) ans+=query1(l,r,rson);
+    return ans;
+}
+int query2(int pos,int id)
+{
+    if(tr[id].l==pos&&tr[id].r==pos) return tr[id].s;
+    pushdown(id);
+    int mid=(tr[id].l+tr[id].r)/2;
+    if(pos<=mid) return query2(pos,lson);
+    else return query2(pos,rson);
+}
+void modify(int u,int v,int k)//区间修改
+{
+    int f1=top[u],f2=top[v];
+    while(f1!=f2)
+    {
+        if(dep[f1]>=dep[f2])
+        {
+            update2(id[f1],id[u],1,k);
+            u=fa[f1];
+            f1=top[u];
+        }
+        else
+        {
+            update2(id[f2],id[v],1,k);
+            v=fa[f2];
+            f2=top[v];
+        }
+    }
+    if(dep[u]<dep[v]) swap(u,v);
+    update2(id[v],id[u],1,k);
+}
+int solve(int u,int v)//区间查询
+{
+    int f1=top[u],f2=top[v];
+    int ans=0;
+    while(f1!=f2)
+    {
+        if(dep[f1]>=dep[f2])
+        {
+            ans+=query1(id[f1],id[u],1);
+            u=fa[f1];
+            f1=top[u];
+        }
+        else
+        {
+            ans+=query1(id[f2],id[v],1);
+            v=fa[f2];
+            f2=top[v];
+        }
+    }
+    if(dep[u]<dep[v]) swap(u,v);
+    ans+=query1(id[v],id[u],1);
+    return ans;
+}
+int main()
+{
+    //freopen("1.txt","r",stdin);
+    int Q,rt;//rt是树的根节点
+    scanf("%d%d%d",&n,&Q,&rt);
+    memset(head,-1,sizeof(head));
+    m=0;
+    for(int i=1;i<n;i++)
+    {
+        int u,v;
+        scanf("%d%d",&u,&v);
+        addedge(u,v);
+    }
+    addedge(0,rt);
+    dfs1(1,-1,0);
+    top[0]=0;
+    N=0;
+    dfs2(-1,0);
+    build(1,N,1);
+    while(Q--)
+    {
+        int op;
+        int u,v,w;
+        scanf("%d",&op);
+        if(op==1)
+        {
+            scanf("%d%d",&u,&w);
+            update1(id[u],1,w);
+        }
+        else if(op==2)
+             {
+                 scanf("%d%d%d",&u,&v,&w);
+                 modify(u,v,w);
+             }
+             else
+             {
+                 scanf("%d",&u);
+                 printf("%d\n",query2(id[u],1)+solve(u,rt));
+             }
+    }
+    return 0;
+}
