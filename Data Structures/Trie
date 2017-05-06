@@ -1,0 +1,78 @@
+//静态字典树
+#include <bits/stdc++.h>
+#define MAX 28
+using namespace std;
+int tot;//总节点数
+struct Trie
+{
+	Trie *nxt[MAX];
+	//节点信息
+}tr[666666];
+Trie *rt;//根节点
+Trie* CreateNode() 
+{
+	//节点信息初始化
+	return &tr[tot++];
+}
+void Insert(char *str)//插入字符串
+{
+	if(*str=='\0') return;
+    char *p=str;
+	Trie *tmp,*t=rt;
+	while(*p!='\0')
+	{
+		if(t->nxt[*p-'a']==NULL)
+		{
+			tmp=CreateNode();
+			//节点信息更新
+			t->nxt[*p-'a']=tmp;
+		}
+		t=t->nxt[*p-'a'];
+		//节点信息更新
+		p++;
+	}
+}
+bool Search(char *str)//查找一个字符串前缀(或者查找所需要的信息)
+{
+	if(*str=='\0') return 0;
+    char *p=str;
+	Trie *tmp,*t=rt;
+	while(*p!='\0')
+	{
+		if(t->nxt[*p-'a']==NULL)
+		{
+			tmp=CreateNode();
+			//必要时在查询过程中仍需要增加节点
+			//节点信息查询
+			t->nxt[*p-'a']=tmp;
+			return false;
+		}
+		t=t->nxt[*p-'a'];
+		//节点信息查询
+		p++;
+	}
+	return true;
+}
+void init()//初始化字典树
+{
+	tot=0;
+	rt=CreateNode();
+}
+int main()
+{
+    //freopen("3.txt","r",stdin);
+    init();
+    int n;
+    scanf("%d",&n);
+    for(int i=0;i<n;++i)
+    {
+    	char a[105];
+    	scanf("%s",a);
+    	Insert(a);
+    }
+    char b[105];
+    scanf("%s",b);
+    if(Search(b)) printf("Find %s\n",b);
+    else printf("Not Find %s\n",b);
+    return 0;
+}
