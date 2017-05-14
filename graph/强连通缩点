@@ -1,0 +1,149 @@
+//有向图求强连通分量
+#include <bits/stdc++.h>  
+const int MAX=100005;
+using namespace std;
+int cnt,head[MAX];
+struct edge
+{
+    int to,nxt;
+    edge(int a=-1,int b=-1) {to=a;nxt=b;}
+}e[MAX];
+void addedge(int u,int v)
+{
+	e[cnt]=edge(v,head[u]);
+	head[u]=cnt++;
+}
+int dfs_clock,low[MAX],dfn[MAX];
+bool in[MAX];
+int st[MAX],top;
+int num,id[MAX];//强连通所点后编号从0开始,num强联通数量
+int sz[MAX];
+void dfs(int u)
+{
+    low[u]=dfn[u]=++dfs_clock;
+    in[u]=1;
+    st[++top]=u;
+    for(int p=head[u];p!=-1;p=e[p].nxt)
+    {
+    	int v=e[p].to;
+        if(!dfn[v])
+        {
+            dfs(v);
+            low[u]=min(low[u],low[v]);
+        }
+        else if(in[v])
+        {
+            low[u]=min(low[u],dfn[v]);
+        }
+    }
+    if(low[u]==dfn[u])
+    {
+        int y;
+        do
+        {
+            y=st[top--];
+            sz[num]++;
+            id[y]=num;
+            in[y]=0;
+        }while(u!=y);
+        num++;
+    }
+
+}
+void tarjan(int n)
+{
+	top=0;
+	num=0;
+	dfs_clock=0;
+	memset(in,0,sizeof(in));
+	memset(sz,0,sizeof(sz));
+	memset(dfn,0,sizeof(dfn));
+	for(int i=0;i<n;++i) if(!dfn[i]) dfs(i);
+}
+int c1,c2,h1[MAX],h2[MAX];
+edge e1[MAX],e2[MAX];
+void add(int u,int v)
+{
+	e1[c1]=edge(v,h1[u]);h1[u]=c1++;
+	e2[c2]=edge(u,h2[v]);h2[v]=c2++;
+}
+bool isinq[MAX];
+queue<int>q;
+void spfa(int n,int s,int *d,edge *he,int *h)
+{
+	while(!q.empty()) q.pop();
+	for(int i=0;i<n;++i)
+	{
+		isinq[i]=false;
+		d[i]=0;
+	}	
+	d[s]=sz[s];
+	isinq[s]=true;
+	q.push(s);
+	while(!q.empty())
+	{
+		int u=q.front();q.pop();
+		isinq[u]=false;
+		for(int p=h[u];p!=-1;p=he[p].nxt)
+		{
+			int v=he[p].to;
+			if(d[v]<d[u]+sz[v])
+			{
+				d[v]=d[u]+sz[v];
+				if(!isinq[v])
+				{
+					isinq[v]=1;
+					q.push(v);
+				}
+			}
+		}
+	}
+}
+int ds[MAX],de[MAX];
+int main()  
+{
+	freopen("3.txt","r",stdin);
+    int n,m;
+    scanf("%d%d",&n,&m);
+    cnt=0;
+	memset(head,-1,sizeof(head));
+    for(int i=0;i<m;++i)
+    {
+    	int u,v;
+    	scanf("%d%d",&u,&v);
+    	u--;v--;
+    	addedge(u,v);
+    }
+    tarjan(n);
+    c1=0;
+    c2=0;
+    memset(h1,-1,sizeof(h1));
+    memset(h2,-1,sizeof(h2));
+    for(int i=0;i<n;++i)
+    {
+    	for(int p=head[i];p!=-1;p=e[p].nxt)
+    	{
+    		int x=e[p].to;
+    		if(id[i]==id[x]) continue;
+    		add(id[i],id[x]);
+    	}
+    }
+    spfa(num,id[0],ds,e1,h1);
+    spfa(num,id[0],de,e2,h2);
+    int ans=sz[id[0]];
+    for(int i=0;i<num;++i)
+    {
+    	if(ds[i]==0) continue;
+    	bool ok=false;
+    	for(int p=h2[i];p!=-1;p=e2[p].nxt)
+    	{
+    		int v=e2[p].to;
+    		if(v==id[0]) ok=true;
+    		if(de[v]==0) continue;
+    		ans=max(ans,ds[i]+de[v]-sz[id[0]]);
+    	}
+    	if(ok) ans=max(ans,ds[i]);
+    }
+    printf("%d\n",ans);
+    return 0;
+}
